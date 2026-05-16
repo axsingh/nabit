@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { getProfile } from "@/lib/auth";
 import SignOutButton from "@/app/components/SignOutButton";
+import Nav from "@/app/components/Nav";
+import Dashboard from "@/app/components/Dashboard";
 
 export default async function Home() {
   const profile = await getProfile();
@@ -13,7 +15,9 @@ export default async function Home() {
         <p className="mt-2 text-sm text-zinc-500">
           Contact the administrator if you think this is a mistake.
         </p>
-        <SignOutButton />
+        <div className="mt-8">
+          <SignOutButton />
+        </div>
       </Centered>
     );
   }
@@ -26,24 +30,19 @@ export default async function Home() {
           Your account ({profile.email}) is pending admin approval. You&apos;ll
           be able to create watches once approved.
         </p>
-        <SignOutButton />
+        <div className="mt-8">
+          <SignOutButton />
+        </div>
       </Centered>
     );
   }
 
-  // Approved — placeholder until the dashboard slice lands.
+  // Approved — full dashboard.
   return (
-    <Centered>
-      <h1 className="text-2xl font-semibold tracking-tight">Nabit</h1>
-      <p className="mt-1 text-sm text-zinc-500">
-        Signed in as {profile.email}
-        {profile.role === "admin" && " · admin"}
-      </p>
-      <p className="mt-6 text-sm text-zinc-400">
-        Dashboard &amp; chat agent coming in the next build slice.
-      </p>
-      <SignOutButton />
-    </Centered>
+    <main className="min-h-screen bg-zinc-50 dark:bg-black">
+      <Nav email={profile.email} isAdmin={profile.role === "admin"} />
+      <Dashboard />
+    </main>
   );
 }
 

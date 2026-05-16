@@ -13,7 +13,7 @@ export default function SignOutButton() {
   return (
     <button
       onClick={signOut}
-      className="mt-8 text-xs text-zinc-400 underline underline-offset-4 hover:text-zinc-600"
+      className="text-xs text-zinc-400 underline underline-offset-4 hover:text-zinc-600"
     >
       Sign out
     </button>
