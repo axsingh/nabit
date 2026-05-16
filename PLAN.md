@@ -282,11 +282,17 @@ keeping well inside Gemini's 1,500/day even with 5 users.
 |---|---|---|---|
 | **0** | ~~Spike: confirm Apple Refurb fetch+parse~~ **✅ DONE** — see result below | 0.5h | ✅ Real refurb data parsed (`spike/apple-refurb.mjs`) |
 | 1 | ~~Vertical slice: adapter → match → alert → cron~~ **✅ DONE** | 2h | ✅ Pipeline verified locally + cron green on GitHub Actions (dry-run until Resend key). Runs vs example config only — real user watches need Phase 2–4. |
-| 2 | Scaffold the app: Next.js, Supabase Auth + RLS, admin approval gate, chat UI, dashboard, Web Push enable | 3h | You log in (approved), chat, see dashboard, enable Web Push |
-| 3 | Generalize: agent tools (web_search, fetch_page, create/list/update/pause/delete/test_watch); persist watches | 2h | Create + test any watch via chat |
-| 4 | Wire the Phase-1 executor to DB-driven watches; email + SMS delivery; dedupe + watch_runs + breakage guard | 2h | Any chat-created watch fires correctly |
-| 5 | Admin page (user list, approve/disable, usage) | 1h | You can approve wife/brother |
-| 6 | **You** use the live chat agent to create your own watches (it asks you the source-derived questions, you answer, it saves). Nothing pre-filled by the developer. | 0.5h | You created watches yourself via the product |
+| 2 | ~~Scaffold app: Next.js, Supabase Auth+RLS, admin gate, dashboard~~ **✅ DONE** | 3h | ✅ Build clean, gating verified, Supabase project created+migrated by tooling |
+| 3 | ~~Chat agent + tools (web_search, fetch_page, create/list/update/status/delete/test_watch)~~ **✅ DONE** | 2h | ✅ Groq tool-calling verified; /api/chat auth-gated. (LLM = Groq, not Gemini: Google account billing forced free_tier limit:0) |
+| 4 | ~~Wire executor to DB watches; dedupe + watch_runs + breakage guard~~ **✅ DONE** | 2h | ✅ Full E2E vs real Supabase PASSED; cron green on CI; Node WS bug fixed |
+| 5 | ~~Admin page (approve/disable users)~~ **✅ DONE** | 1h | ✅ Owner-only, server-action approve/disable verified |
+| 6 | **You** sign in + use the live chat agent to create your own watches | 0.5h | ⏳ Awaiting your first sign-in (magic link) |
+
+**Build complete.** Remaining = owner actions only: (1) sign in via magic
+link, (2) optionally add `RESEND_API_KEY` (GitHub secret + `.env`) to flip
+notifications from dry-run to real email. Notes: notifications now =
+email + Web Push + opt-in SMS (no Telegram); LLM = Groq free tier (Gemini
+abandoned — account billing zeroed the free tier).
 
 Auto-buy (payment automation) is **out of scope** — not a day-of-work item;
 revisit separately later with hard safety rails.
