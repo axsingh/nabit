@@ -1,0 +1,38 @@
+# ─── Secrets / env (CRITICAL: this repo is PUBLIC) ───
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.json
+service-account*.json
+**/credentials*.json
+
+# ─── Real user data (never commit) ───
+watches.json
+watches.local.json
+*.local.json
+
+# ─── Node / Next.js ───
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+*.log
+npm-debug.log*
+.pnpm-debug.log*
+
+# ─── Tooling / OS ───
+.DS_Store
+.vercel
+.turbo
+*.tsbuildinfo
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# ─── Spike scratch ───
+/tmp/
+*.html.cache

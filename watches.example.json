@@ -1,0 +1,22 @@
+{
+  "_comment": "User-owned watch definitions. NOTHING here is hardcoded in app code. In the real product these rows live in the database and are created by the agent asking you what you want. This file is just the Phase-1 stand-in until the chat UI exists. Add as many watches as you like.",
+  "watches": [
+    {
+      "id": "example-mbp14",
+      "name": "EXAMPLE — replace with your real target",
+      "source": "apple-refurb",
+      "category": "macbook-pro",
+      "criteria": {
+        "model": "macbookpro",
+        "screensize": "14inch",
+        "chipMatches": "M(4|5)\\s*Pro",
+        "minMemoryGb": 24,
+        "minStorageGb": 1000,
+        "priceBelow": 1899
+      },
+      "schedule": { "everyMinutes": 10 },
+      "channels": ["telegram"],
+      "alertMode": "once_then_pause"
+    }
+  ]
+}
