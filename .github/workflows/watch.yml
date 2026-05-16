@@ -1,8 +1,9 @@
 name: nabit-watch
 
 # Runs the watch executor every 10 minutes on GitHub's free (unlimited for
-# public repos) Actions minutes. Stays in DRY-RUN until the RESEND_API_KEY
-# secret is set — no code change needed to go live.
+# public repos) Actions minutes. Reads watches from Supabase; dedupe is
+# DB-backed (alerts unique index), so no state cache needed. Notifications
+# stay in DRY-RUN until RESEND_API_KEY secret is set — no code change to go live.
 
 on:
   schedule:
@@ -22,20 +23,16 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+          cache: npm
 
-      # Persist dedupe state (.state/) across scheduled runs. Unique key per
-      # run + restore-keys prefix restores the most recent prior state.
-      - name: Restore dedupe state
-        uses: actions/cache@v4
-        with:
-          path: .state
-          key: nabit-state-${{ github.run_id }}
-          restore-keys: |
-            nabit-state-
+      - name: Install deps
+        run: npm ci
 
       - name: Run watch executor
         env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           ALERT_FROM_EMAIL: ${{ secrets.ALERT_FROM_EMAIL }}
           ALERT_TO_EMAIL: ${{ secrets.ALERT_TO_EMAIL }}
