@@ -281,7 +281,7 @@ keeping well inside Gemini's 1,500/day even with 5 users.
 | Phase | Scope | Est | Done when |
 |---|---|---|---|
 | **0** | ~~Spike: confirm Apple Refurb fetch+parse~~ **✅ DONE** — see result below | 0.5h | ✅ Real refurb data parsed (`spike/apple-refurb.mjs`) |
-| 1 | **Vertical slice:** Apple-refurb adapter (criteria from config, not hardcoded) end-to-end (fetch → code match → **email** alert) on GitHub Actions cron | 2h | A real refurb match fires a real email — "never miss again" achieved |
+| 1 | ~~Vertical slice: adapter → match → alert → cron~~ **✅ DONE** | 2h | ✅ Pipeline verified locally + cron green on GitHub Actions (dry-run until Resend key). Runs vs example config only — real user watches need Phase 2–4. |
 | 2 | Scaffold the app: Next.js, Supabase Auth + RLS, admin approval gate, chat UI, dashboard, Web Push enable | 3h | You log in (approved), chat, see dashboard, enable Web Push |
 | 3 | Generalize: agent tools (web_search, fetch_page, create/list/update/pause/delete/test_watch); persist watches | 2h | Create + test any watch via chat |
 | 4 | Wire the Phase-1 executor to DB-driven watches; email + SMS delivery; dedupe + watch_runs + breakage guard | 2h | Any chat-created watch fires correctly |
