@@ -33,6 +33,10 @@ npm-debug.log*
 .vscode/*
 !.vscode/extensions.json
 
+# ─── Supabase CLI link artifacts ───
+supabase/.temp/
+supabase/.branches/
+
 # ─── Runtime state (dedupe; persisted via Actions cache, not git) ───
 .state/
 
