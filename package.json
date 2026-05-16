@@ -2,12 +2,32 @@
   "name": "nabit",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "description": "Conversational agent that watches for deals you describe and alerts you the moment they appear",
   "scripts": {
-    "watch:once": "node src/executor.mjs",
-    "watch:dry": "DRY_RUN=1 node src/executor.mjs",
-    "spike:apple": "node spike/apple-refurb.mjs"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "watch:once": "node worker/executor.mjs",
+    "watch:dry": "DRY_RUN=1 node worker/executor.mjs",
+    "spike:apple": "node worker/spike/apple-refurb.mjs"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "^2.0.0",
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.47.0",
+    "ai": "^5.0.0",
+    "next": "16.2.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   },
   "engines": {
     "node": ">=20"
