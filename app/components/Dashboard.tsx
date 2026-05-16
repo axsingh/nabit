@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import Chat from "@/app/components/Chat";
 
 type Watch = {
   id: string;
@@ -38,6 +39,11 @@ export default async function Dashboard() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-10">
+      <section className="mb-10">
+        <h2 className="mb-3 text-lg font-semibold">Create a watch</h2>
+        <Chat />
+      </section>
+
       <section>
         <div className="flex items-baseline justify-between">
           <h2 className="text-lg font-semibold">Your watches</h2>
