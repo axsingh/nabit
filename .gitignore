@@ -33,6 +33,9 @@ npm-debug.log*
 .vscode/*
 !.vscode/extensions.json
 
+# ─── Runtime state (dedupe; persisted via Actions cache, not git) ───
+.state/
+
 # ─── Spike scratch ───
 /tmp/
 *.html.cache
