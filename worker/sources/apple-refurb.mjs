@@ -45,11 +45,30 @@ function normalize(tile) {
   };
 }
 
+// Tolerant chip matcher (models over-escape regexes; normalize + fallback).
+function chipHit(title, pattern) {
+  const pat = String(pattern)
+    .replace(/\\+s\*?/gi, " ")
+    .replace(/\\+/g, "")
+    .replace(/\s+/g, "\\s*");
+  try {
+    return new RegExp(pat, "i").test(title);
+  } catch {
+    const hay = title.toLowerCase();
+    return String(pattern)
+      .split("|")
+      .some((t) => {
+        const tok = t.replace(/[\\^$.*+?()[\]{}]/g, "").trim().toLowerCase();
+        return tok.length > 0 && hay.includes(tok);
+      });
+  }
+}
+
 // Generic predicate driven entirely by the user's criteria object.
 function matches(p, c) {
   if (c.model && p.model !== c.model) return false;
   if (c.screensize && p.screensize !== c.screensize) return false;
-  if (c.chipMatches && !new RegExp(c.chipMatches, "i").test(p.title)) return false;
+  if (c.chipMatches && !chipHit(p.title, c.chipMatches)) return false;
   if (c.minMemoryGb != null && !(p.memoryGb >= c.minMemoryGb)) return false;
   if (c.minStorageGb != null && !(p.storageGb >= c.minStorageGb)) return false;
   if (

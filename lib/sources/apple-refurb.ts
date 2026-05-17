@@ -69,11 +69,32 @@ export async function fetchAppleProducts(
   });
 }
 
+// Tolerant chip matcher: models often over-escape (e.g. "M(4|5)\\s*Pro"
+// becomes a literal-backslash regex that never matches real titles).
+// Normalize escaped whitespace to flexible whitespace; fall back to a
+// plain token-contains check if the pattern still won't compile.
+export function chipHit(title: string, pattern: string): boolean {
+  let pat = pattern
+    .replace(/\\+s\*?/gi, " ") // \s, \\s, \s*, \\s* -> single space
+    .replace(/\\+/g, "") // drop any other stray escapes
+    .replace(/\s+/g, "\\s*"); // make spaces whitespace-tolerant
+  try {
+    return new RegExp(pat, "i").test(title);
+  } catch {
+    const hay = title.toLowerCase();
+    return pattern
+      .split("|")
+      .some((t) => {
+        const tok = t.replace(/[\\^$.*+?()[\]{}]/g, "").trim().toLowerCase();
+        return tok.length > 0 && hay.includes(tok);
+      });
+  }
+}
+
 export function matchApple(p: AppleProduct, c: AppleCriteria): boolean {
   if (c.model && p.model !== c.model) return false;
   if (c.screensize && p.screensize !== c.screensize) return false;
-  if (c.chipMatches && !new RegExp(c.chipMatches, "i").test(p.title))
-    return false;
+  if (c.chipMatches && !chipHit(p.title, c.chipMatches)) return false;
   if (c.minMemoryGb != null && !(Number(p.memoryGb) >= c.minMemoryGb))
     return false;
   if (c.minStorageGb != null && !(Number(p.storageGb) >= c.minStorageGb))
