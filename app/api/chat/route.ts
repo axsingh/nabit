@@ -8,6 +8,11 @@ export const maxDuration = 30;
 
 const groq = createGroq({ apiKey: process.env.GROQ_API_KEY });
 
+// openai/gpt-oss-20b: reliable tool-calling on Groq free tier with a
+// separate token budget from llama-3.3-70b (whose 100K/day is shared with
+// the user's other apps and gets exhausted). Override via GROQ_MODEL.
+const MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
+
 const SYSTEM = `You are Nabit, a deal-watching agent. You turn a user's
 natural-language request into a concrete "watch" that a background worker runs
 on a schedule and alerts them on.
@@ -40,12 +45,21 @@ export async function POST(req: Request) {
   const supabase = await createClient();
 
   const result = streamText({
-    model: groq("llama-3.3-70b-versatile"),
+    model: groq(MODEL),
     system: SYSTEM,
     messages: convertToModelMessages(messages),
     tools: buildTools(supabase, profile.id),
     stopWhen: stepCountIs(8),
   });
 
-  return result.toUIMessageStreamResponse();
+  // Surface real errors to the client instead of the SDK's masked default,
+  // so the user sees e.g. a Groq rate-limit message rather than silence.
+  return result.toUIMessageStreamResponse({
+    onError: (error) => {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (/rate.?limit|TPD|tokens per day/i.test(msg))
+        return "Groq free-tier daily token limit hit (shared with your other apps). It resets daily — try again later, or set a different GROQ_MODEL / separate Groq key.";
+      return `Agent error: ${msg}`;
+    },
+  });
 }

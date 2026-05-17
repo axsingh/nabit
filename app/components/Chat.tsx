@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 export default function Chat() {
   const router = useRouter();
   const [input, setInput] = useState("");
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, error } = useChat({
     onFinish: () => router.refresh(), // refresh dashboard if a watch was created
   });
   const busy = status === "submitted" || status === "streaming";
@@ -51,6 +51,11 @@ export default function Chat() {
           </div>
         ))}
         {busy && <p className="text-xs text-zinc-400">thinking…</p>}
+        {error && (
+          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+            {error.message || "Something went wrong. Please try again."}
+          </p>
+        )}
       </div>
 
       <form

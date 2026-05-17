@@ -3,6 +3,19 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { runAppleRefurb } from "@/lib/sources/apple-refurb";
 
+// Some models pass object args as a JSON string. Coerce defensively so a
+// model quirk never causes a silent "nothing happens".
+const jsonObject = z.preprocess((v) => {
+  if (typeof v === "string") {
+    try {
+      return JSON.parse(v);
+    } catch {
+      return v;
+    }
+  }
+  return v;
+}, z.record(z.string(), z.any()));
+
 // Builds the agent's tool set, scoped to one authenticated user.
 // All DB writes go through the user's RLS-scoped client.
 export function buildTools(supabase: SupabaseClient, userId: string) {
@@ -65,7 +78,7 @@ export function buildTools(supabase: SupabaseClient, userId: string) {
       inputSchema: z.object({
         source: z.string(),
         category: z.string().optional(),
-        criteria: z.record(z.string(), z.any()),
+        criteria: jsonObject,
       }),
       async execute({ source, category, criteria }) {
         if (source !== "apple-refurb") {
@@ -99,7 +112,7 @@ export function buildTools(supabase: SupabaseClient, userId: string) {
         description: z.string().optional(),
         source: z.string(),
         category: z.string().optional(),
-        criteria: z.record(z.string(), z.any()),
+        criteria: jsonObject,
         channels: z.array(z.enum(["email", "web-push", "sms"])).default(["email"]),
         alert_mode: z
           .enum(["once_then_pause", "every_match", "daily_digest"])
@@ -144,7 +157,7 @@ export function buildTools(supabase: SupabaseClient, userId: string) {
       description: "Update fields on an existing watch by id.",
       inputSchema: z.object({
         id: z.string(),
-        patch: z.record(z.string(), z.any()),
+        patch: jsonObject,
       }),
       async execute({ id, patch }) {
         const { error } = await supabase

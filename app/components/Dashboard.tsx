@@ -54,8 +54,7 @@ export default async function Dashboard() {
           <div className="mt-4 rounded-xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">
             <p className="text-sm text-zinc-500">No watches yet.</p>
             <p className="mt-1 text-xs text-zinc-400">
-              The chat agent (next build slice) will let you create watches by
-              describing what you want.
+              Use the chat above — describe a deal and I&apos;ll set up a watch.
             </p>
           </div>
         ) : (
