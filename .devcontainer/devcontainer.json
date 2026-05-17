@@ -1,0 +1,61 @@
+// Isolation sandbox for the nabit project.
+// Only the repo workspace is mounted — nothing else from the host filesystem
+// is visible inside the container. All secrets are forwarded from host env vars
+// using ${localEnv:VAR_NAME} so no credentials are ever hardcoded here.
+{
+  "name": "nabit",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "none"
+    },
+    "ghcr.io/devcontainers-contrib/features/supabase-cli:1": {}
+  },
+
+  "postCreateCommand": "npm i -g @anthropic-ai/claude-code && npm install",
+
+  "forwardPorts": [3000, 3001],
+  "portsAttributes": {
+    "3000": {
+      "label": "Next.js",
+      "onAutoForward": "notify"
+    },
+    "3001": {
+      "label": "Worker / Proxy (optional)",
+      "onAutoForward": "silent"
+    }
+  },
+
+  "remoteEnv": {
+    "GROQ_API_KEY": "${localEnv:GROQ_API_KEY}",
+    "SUPABASE_URL": "${localEnv:SUPABASE_URL}",
+    "SUPABASE_ANON_KEY": "${localEnv:SUPABASE_ANON_KEY}",
+    "SUPABASE_SERVICE_ROLE_KEY": "${localEnv:SUPABASE_SERVICE_ROLE_KEY}",
+    "RESEND_API_KEY": "${localEnv:RESEND_API_KEY}",
+    "ALERT_FROM_EMAIL": "${localEnv:ALERT_FROM_EMAIL}",
+    "VAPID_PUBLIC_KEY": "${localEnv:VAPID_PUBLIC_KEY}",
+    "VAPID_PRIVATE_KEY": "${localEnv:VAPID_PRIVATE_KEY}",
+    "VAPID_SUBJECT": "${localEnv:VAPID_SUBJECT}",
+    "TWILIO_ACCOUNT_SID": "${localEnv:TWILIO_ACCOUNT_SID}",
+    "TWILIO_AUTH_TOKEN": "${localEnv:TWILIO_AUTH_TOKEN}",
+    "TWILIO_FROM_NUMBER": "${localEnv:TWILIO_FROM_NUMBER}",
+    "CRON_SHARED_SECRET": "${localEnv:CRON_SHARED_SECRET}",
+    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
+    "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}"
+  },
+
+  "runArgs": ["--network=bridge"],
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "ms-vscode.vscode-typescript-next"
+      ]
+    }
+  }
+}
