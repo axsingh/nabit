@@ -12,6 +12,7 @@ import ws from "ws";
 globalThis.WebSocket ||= ws;
 import { createClient } from "@supabase/supabase-js";
 import { runAppleRefurb } from "./sources/apple-refurb.mjs";
+import { runCustomUrl } from "./sources/custom-url.mjs";
 import { notify } from "./notify.mjs";
 
 // Local dev: load .env if vars not already in the environment (CI sets them).
@@ -37,10 +38,12 @@ const db = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { persistSession: false },
 });
 
-// adapter registry: source -> fn(watch) -> { scanned, matches:[{...,dedupeKey}] }
+// adapter registry: source -> fn(watch) -> { scanned, matches:[{...,dedupeKey}], hash?, llmCalls?, blocked?, unchanged? }
 const SOURCES = {
   "apple-refurb": (w) =>
     runAppleRefurb({ category: w.category, criteria: w.criteria }),
+  "custom-url": (w) =>
+    runCustomUrl(w.criteria, { prevHash: w.last_result?.hash }),
 };
 
 function isDue(w) {
@@ -60,13 +63,13 @@ async function ownerEmail(userId) {
 
 async function runWatch(w) {
   const started = Date.now();
-  const log = (status, error = null) =>
+  const log = (status, error = null, llmCalls = 0) =>
     db.from("watch_runs").insert({
       user_id: w.user_id,
       watch_id: w.id,
       status,
       duration_ms: Date.now() - started,
-      llm_calls: 0, // structured source: no LLM
+      llm_calls: llmCalls,
       error,
     });
 
@@ -96,6 +99,45 @@ async function runWatch(w) {
     return 0;
   }
 
+  // Page unchanged since last check (custom-url): skip extraction, no LLM spend.
+  if (result.unchanged) {
+    await db
+      .from("watches")
+      .update({ last_checked_at: new Date().toISOString(), fail_count: 0 })
+      .eq("id", w.id);
+    await log("no_match");
+    console.log(`  "${w.name}": unchanged, skipped`);
+    return 0;
+  }
+
+  // Site blocked us (anti-bot). Count as a soft failure -> eventual auto-pause.
+  if (result.blocked) {
+    const fail = (w.fail_count ?? 0) + 1;
+    const patch = {
+      fail_count: fail,
+      last_checked_at: new Date().toISOString(),
+      last_result: { ...(w.last_result || {}), hash: result.hash },
+    };
+    if (fail >= 5) patch.status = "paused";
+    await db.from("watches").update(patch).eq("id", w.id);
+    await log("fetch_error", `blocked (HTTP ${result.status})`, result.llmCalls || 0);
+    console.error(
+      `  "${w.name}": blocked HTTP ${result.status}${fail >= 5 ? " (auto-paused)" : ""}`
+    );
+    return 0;
+  }
+
+  // Extraction-level error (e.g. bad regex, LLM non-JSON).
+  if (result.error) {
+    const fail = (w.fail_count ?? 0) + 1;
+    const patch = { fail_count: fail, last_checked_at: new Date().toISOString() };
+    if (fail >= 5) patch.status = "paused";
+    await db.from("watches").update(patch).eq("id", w.id);
+    await log("extract_error", result.error, result.llmCalls || 0);
+    console.error(`  "${w.name}": extract error: ${result.error}`);
+    return 0;
+  }
+
   let sent = 0;
   const to = await ownerEmail(w.user_id);
   for (const m of result.matches) {
@@ -119,11 +161,15 @@ async function runWatch(w) {
   const patch = {
     last_checked_at: new Date().toISOString(),
     fail_count: 0,
-    last_result: { count: result.matches.length, at: new Date().toISOString() },
+    last_result: {
+      count: result.matches.length,
+      at: new Date().toISOString(),
+      ...(result.hash ? { hash: result.hash } : {}),
+    },
   };
   if (sent > 0 && w.alert_mode === "once_then_pause") patch.status = "paused";
   await db.from("watches").update(patch).eq("id", w.id);
-  await log(sent > 0 ? "match" : "no_match");
+  await log(sent > 0 ? "match" : "no_match", null, result.llmCalls || 0);
   console.log(
     `  "${w.name}": scanned ${result.scanned}, ${result.matches.length} match, ${sent} new alert(s)`
   );

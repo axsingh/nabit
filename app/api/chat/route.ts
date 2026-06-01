@@ -37,8 +37,18 @@ NON-NEGOTIABLE RULES:
   chipMatches (a case-insensitive regex matched against the product title;
   use a SIMPLE alternation with literal spaces and NO backslash escapes,
   e.g. "M4 Pro|M5 Pro" — never use \\s or other escaped sequences),
-  minMemoryGb, minStorageGb, priceBelow. Other sources can be saved but
-  may not yet be auto-checked — say so honestly.
+  minMemoryGb, minStorageGb, priceBelow.
+- SOURCE "custom-url": monitor ANY page the user gives you (use this when
+  they provide a URL). criteria keys: url (required), mode
+  ("selector"|"regex"|"llm"; default "llm"), regex (capture group for the
+  value, for regex/selector mode), extraction_prompt (what to look for, for
+  llm mode), and at least one match condition: priceBelow (number),
+  mustInclude (text that must appear), requireInStock (true). ALWAYS call
+  test_watch first on a custom-url: it fetches the page live. If it reports
+  blocked:true, tell the user plainly the site blocks our server (anti-bot /
+  needs JS) and that the watch may be unreliable — but still offer to create
+  it if they want. Prefer "llm" mode unless the user gives a precise selector.
+- Other sources can be saved but may not yet be auto-checked — say so honestly.
 - Channels: "email" (default, reliable), "web-push", "sms" (opt-in).
 - Keep replies short and concrete. Confirm before destructive actions.`;
 

@@ -2,6 +2,7 @@ import { tool } from "ai";
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { runAppleRefurb } from "@/lib/sources/apple-refurb";
+import { runCustomUrl } from "@/lib/sources/custom-url";
 
 // Some models pass object args as a JSON string. Coerce defensively so a
 // model quirk never causes a silent "nothing happens".
@@ -81,22 +82,40 @@ export function buildTools(supabase: SupabaseClient, userId: string) {
         criteria: jsonObject,
       }),
       async execute({ source, category, criteria }) {
-        if (source !== "apple-refurb") {
+        try {
+          if (source === "apple-refurb") {
+            const { scanned, matches } = await runAppleRefurb(
+              category ?? "macbook-pro",
+              criteria
+            );
+            return {
+              supported: true,
+              scanned,
+              matchCount: matches.length,
+              matches: matches.slice(0, 10),
+            };
+          }
+          if (source === "custom-url") {
+            const r = await runCustomUrl(criteria);
+            if (r.blocked)
+              return {
+                supported: true,
+                blocked: true,
+                message: `That site blocked our server (HTTP ${r.status}) — likely anti-bot or it needs JavaScript. You can still create the watch (some sites work intermittently), but it may not reliably check.`,
+              };
+            if ("error" in r && r.error)
+              return { supported: true, error: r.error };
+            return {
+              supported: true,
+              scanned: r.scanned,
+              matchCount: r.matches.length,
+              matches: r.matches,
+              extracted: r.extracted,
+            };
+          }
           return {
             supported: false,
-            message: `Live test isn't available for source "${source}" yet. You can still create the watch; the background worker supports apple-refurb today and more sources are being added.`,
-          };
-        }
-        try {
-          const { scanned, matches } = await runAppleRefurb(
-            category ?? "macbook-pro",
-            criteria
-          );
-          return {
-            supported: true,
-            scanned,
-            matchCount: matches.length,
-            matches: matches.slice(0, 10),
+            message: `Live test isn't available for source "${source}" yet. Supported now: apple-refurb, custom-url.`,
           };
         } catch (e) {
           return { supported: true, error: String(e) };
