@@ -1,0 +1,34 @@
+name: nabit-heartbeat
+
+# Once-a-day per-user summary email. Per-user throttle (last_heartbeat_at)
+# means safe to re-run; only users actually due get an email. Free unlimited
+# Actions minutes on this public repo.
+
+on:
+  schedule:
+    # 15:00 UTC daily ≈ 8am PT (PDT) / 7am PT (PST) — morning summary.
+    - cron: "0 15 * * *"
+  workflow_dispatch: {} # manual trigger for testing
+
+concurrency:
+  group: nabit-heartbeat
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Send heartbeats
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_FROM_EMAIL: ${{ secrets.ALERT_FROM_EMAIL }}
+        run: node worker/heartbeat.mjs
