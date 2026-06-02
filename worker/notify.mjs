@@ -1,7 +1,11 @@
 // Notification dispatch. Phase 1 supports dry-run (console) and email (Resend).
 // Web Push + SMS are added in later phases. Channel selection is per-watch.
 
-const DRY_RUN = process.env.DRY_RUN === "1" || !process.env.RESEND_API_KEY;
+// Evaluated at CALL time, not module-load — ESM imports are hoisted, so a
+// module-load const would read env before the executor loads .env locally.
+function isDryRun() {
+  return process.env.DRY_RUN === "1" || !process.env.RESEND_API_KEY;
+}
 
 function renderText(watch, match) {
   return [
@@ -22,7 +26,7 @@ async function sendEmail(to, subject, text) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: process.env.ALERT_FROM_EMAIL || "alerts@resend.dev",
+      from: process.env.ALERT_FROM_EMAIL || "onboarding@resend.dev",
       to,
       subject,
       text,
@@ -38,7 +42,7 @@ export async function notify(watch, match) {
   const text = renderText(watch, match);
   const subject = `Nabit: ${watch.name} — $${match.price}`;
 
-  if (DRY_RUN) {
+  if (isDryRun()) {
     console.log("\n[DRY-RUN] would send alert:\n" + text + "\n");
     return { dryRun: true };
   }

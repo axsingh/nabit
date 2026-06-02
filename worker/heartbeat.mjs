@@ -36,7 +36,7 @@ const db = createClient(SUPABASE_URL, SERVICE_KEY, {
 });
 
 const DRY_RUN = !process.env.RESEND_API_KEY;
-const FROM = process.env.ALERT_FROM_EMAIL || "alerts@resend.dev";
+const FROM = process.env.ALERT_FROM_EMAIL || "onboarding@resend.dev";
 const HEARTBEAT_INTERVAL_HOURS = 23; // safe < 24 against cron drift
 
 async function sendEmail(to, subject, text) {
