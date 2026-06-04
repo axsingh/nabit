@@ -137,6 +137,15 @@ async function main() {
         .order("matched_at", { ascending: false }),
     ]);
 
+    // No daily email when the user has no ACTIVE watches — a "you have
+    // nothing" message every day is pure noise. They get the daily update
+    // only once something is actually being watched.
+    const activeWatches = (watches ?? []).filter((w) => w.status === "active");
+    if (activeWatches.length === 0) {
+      console.log(`  ${u.email}: no active watches — skipping heartbeat`);
+      continue;
+    }
+
     const { subject, text } = render({
       email: u.email,
       watches: watches ?? [],
